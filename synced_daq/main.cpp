@@ -12,11 +12,11 @@ void run_dac_in_parrallel() {
   char send_data[] = {0x00, 0x00};
   char read_data[] = {0x00, 0x00};
 
-  ltc2641 dac;
+  //ltc2641 dac;
   ltc2357_16 adc;
 
-  dac.init();
-  dac.set_digital_steps_per_period_and_hz(10, 16, -23);
+  //dac.init();
+  //dac.set_digital_steps_per_period_and_hz(10, 16, -23);
 
   adc.init();
   
@@ -26,12 +26,12 @@ void run_dac_in_parrallel() {
   adc.set_msg_len(2);
 
 
-  thread t1(&ltc2641::start_dac, &dac, 16*4);
-  sleep(2);
+  //thread t1(&ltc2641::start_dac, &dac, 16*4);
+  //sleep(2);
 
   thread t2(&ltc2357_16::read_adc_fft, &adc);
   t2.join();
-  t1.join();
+  //t1.join();
 
   cout << adc.get_fft_mag_avg() << endl;
   cout << adc.get_fft_largest_freq() << endl;
@@ -40,7 +40,7 @@ void run_dac_in_parrallel() {
 
 
 
-  dac.close();
+  //dac.close();
   adc.close();
 
 }

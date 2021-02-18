@@ -5,4 +5,4 @@ dac: dac.cpp
 	g++ -o dac dac.cpp -l bcm2835
 
 clean:
-	rm *.o out -rf
+	rm *.o dac out -rf
