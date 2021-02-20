@@ -1,8 +1,5 @@
-out: main.cpp
-	g++ -o out main.cpp -pthread -l bcm2835
-
-dac: dac.cpp
-	g++ -o dac dac.cpp -l bcm2835
+graphwave: graphwave.cpp
+	g++ -o graphwave graphwave.cpp pbPlots/pbPlots.cpp pbPlots/supportLib.cpp -lbcm2835 -lm
 
 clean:
-	rm *.o dac out -rf
+	rm *.o samplepeaks graphpeaks out -rf

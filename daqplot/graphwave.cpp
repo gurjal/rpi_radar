@@ -1,6 +1,12 @@
 #include <bcm2835.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <vector>
+
+#include "pbPlots/pbPlots.hpp"
+#include "pbPlots/supportLib.hpp"
+
+using namespace std;
 
 int main() {
   
@@ -66,33 +72,28 @@ int main() {
 
       cur_mag += step_incr;
 
-      //if (j == 0) {
-      //  bcm2835_spi_transfernb(softSpan_data, read_data, len);
-      //  bcm2835_gpio_set(RPI_BPLUS_GPIO_J8_33);
-      //  bcm2835_gpio_clr(RPI_BPLUS_GPIO_J8_33);
-      //  bcm2835_spi_transfernb(send_data, read_data, len);
-      //  adc_data[i] = (read_data[1] << 8 | read_data[0]);
-      //  printf("%02x%02x\n", read_data[1], read_data[0]);
-      //  //printf("%02x%02x%02x\n", read_data[2], read_data[1], read_data[0]);
-      //}
+      if (j == 0) {
+        //bcm2835_spi_transfernb(softSpan_data, read_data, len);
+        //bcm2835_gpio_set(RPI_BPLUS_GPIO_J8_33);
+        //bcm2835_gpio_clr(RPI_BPLUS_GPIO_J8_33);
+        //bcm2835_spi_transfernb(send_data, read_data, len);
+        //adc_data[i] = (read_data[0] << 8 | read_data[1]);
+        //printf("%02x%02x\n", read_data[0], read_data[1]);
+      }
 
     }
 
-    bcm2835_spi_transfernb(softSpan_data, read_data, len);
-    bcm2835_gpio_set(RPI_BPLUS_GPIO_J8_33);
-    bcm2835_gpio_clr(RPI_BPLUS_GPIO_J8_33);
-    bcm2835_spi_transfernb(send_data, read_data, len);
-    adc_data[i] = (read_data[1] << 8 | read_data[0]);
-    //printf("%02x%02x\n\n", read_data[1], read_data[0]);
-    //printf("%02x%02x%02x\n\n", read_data[2], read_data[1], read_data[0]);
+    //bcm2835_spi_transfernb(softSpan_data, read_data, len);
+    //bcm2835_gpio_set(RPI_BPLUS_GPIO_J8_33);
+    //bcm2835_gpio_clr(RPI_BPLUS_GPIO_J8_33);
+    //bcm2835_spi_transfernb(send_data, read_data, len);
+    //adc_data[i] = (read_data[0] << 8 | read_data[1]);
+    //printf("%02x%02x\n\n", read_data[0], read_data[1]);
 
   }
 
   bcm2835_aux_spi_write(0x0000);
   bcm2835_spi_end();
-
-  for (int i = 0; i < periods; i++)
-    printf("%04x\n", adc_data[i]);
 
   return 0;
 }
