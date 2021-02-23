@@ -34,13 +34,13 @@ int main() {
     return 1;
   }
 
+  // adc spi inits
   bcm2835_spi_setBitOrder(BCM2835_SPI_BIT_ORDER_MSBFIRST);
   bcm2835_spi_setDataMode(BCM2835_SPI_MODE0);
   bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_128);
   bcm2835_spi_chipSelect(BCM2835_SPI_CS1);
   bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS1, LOW);
-
-  // Conversion pin set to output
+    // Conversion pin set to output
   bcm2835_gpio_fsel(RPI_BPLUS_GPIO_J8_33, BCM2835_GPIO_FSEL_OUTP);
 
   // dac aux inits
@@ -48,52 +48,81 @@ int main() {
 
   // dac variables
   int hz = 16;
-  int periods = 16 * 5;
-  int steps = 50;
-  uint16_t adc_data[periods] = {0};
+  int periods = 16;
+  int steps = 128;
 
   // adc variables
+  uint16_t adc_data[ periods * steps ] = {0};
 
   // calculate step variables
-  int step_delay = 1000000 / (steps + 1) / hz;
+  int tune = 20;
+  int step_delay = (1000000 / steps / hz) - tune;
   uint16_t step_incr = 0xFFFF / steps;
   uint16_t cur_mag;
 
-  for (int i = 0; i < periods; i++) {
+  bcm2835_aux_spi_write(0x0000);
 
-    cur_mag = 0;
-
-    for (int j = 0; j < steps + 1; j++) {
+  for (int p = 0; p < periods; p++, cur_mag = 0) {
+    for (int s = 0; s < steps; s++) {
 
       bcm2835_aux_spi_write(cur_mag);
-      //bcm2835_aux_spi_write(0xFFFF);
-      //bcm2835_aux_spi_write(0x0000);
+
+      bcm2835_spi_transfernb(softSpan_data, read_data, len);
+      bcm2835_gpio_set(RPI_BPLUS_GPIO_J8_33);
+      bcm2835_gpio_clr(RPI_BPLUS_GPIO_J8_33);
+      bcm2835_spi_transfernb(send_data, read_data, len);
+      adc_data[ (p * steps) + s ] = (uint16_t)(read_data[0] << 8 | read_data[1]);
+      //printf("%f\n", (0xFFFF - adc_data[ (p * steps) + s ]) * (5.12f/65536.0f));
+
       bcm2835_delayMicroseconds(step_delay);
-
       cur_mag += step_incr;
-
-      if (j == 0) {
-        //bcm2835_spi_transfernb(softSpan_data, read_data, len);
-        //bcm2835_gpio_set(RPI_BPLUS_GPIO_J8_33);
-        //bcm2835_gpio_clr(RPI_BPLUS_GPIO_J8_33);
-        //bcm2835_spi_transfernb(send_data, read_data, len);
-        //adc_data[i] = (read_data[0] << 8 | read_data[1]);
-        //printf("%02x%02x\n", read_data[0], read_data[1]);
-      }
-
     }
-
-    //bcm2835_spi_transfernb(softSpan_data, read_data, len);
-    //bcm2835_gpio_set(RPI_BPLUS_GPIO_J8_33);
-    //bcm2835_gpio_clr(RPI_BPLUS_GPIO_J8_33);
-    //bcm2835_spi_transfernb(send_data, read_data, len);
-    //adc_data[i] = (read_data[0] << 8 | read_data[1]);
-    //printf("%02x%02x\n\n", read_data[0], read_data[1]);
-
   }
 
-  bcm2835_aux_spi_write(0x0000);
   bcm2835_spi_end();
+
+	vector<double> xs, ys;
+
+  //for (uint16_t data : adc_data)
+  //  printf("%f\n", (0xFFFF - data) * (5.12f/65536.0f));
+
+  for (int i = 0; i < (periods * steps); i++) {
+    ys.push_back( (double)(0xFFFF - adc_data[i]) * (5.12f/65536.0f) );
+    xs.push_back(i);
+  }
+
+  printf("%04x\n", step_incr);
+
+  RGBABitmapImageReference *imageReference = CreateRGBABitmapImageReference();
+
+	ScatterPlotSeries *series = GetDefaultScatterPlotSeriesSettings();
+	series->xs = &xs;
+	series->ys = &ys;
+
+	//series->linearInterpolation = true;
+	//series->lineType = toVector(L"dashed");
+	//series->lineThickness = 2;
+	//series->color = GetGray(0.3);
+
+	ScatterPlotSettings *settings = GetDefaultScatterPlotSettings();
+	settings->width = 600;
+	settings->height = 400;
+	settings->autoBoundaries = true;
+	settings->autoPadding = true;
+	settings->xMin = 0;
+	settings->xMax = (periods * steps);
+	settings->yMin = 0;
+	settings->yMax = 6;
+	//settings->title = toVector(L"x^2 - 2");
+	//settings->xLabel = toVector(L"X axis");
+	//settings->yLabel = toVector(L"Y axis");
+	settings->scatterPlotSeries->push_back(series);
+
+	DrawScatterPlotFromSettings(imageReference, settings);
+
+	vector<double> *pngdata = ConvertToPNG(imageReference->image);
+	WriteToFile(pngdata, "plot.png");
+	DeleteImage(imageReference->image);
 
   return 0;
 }
