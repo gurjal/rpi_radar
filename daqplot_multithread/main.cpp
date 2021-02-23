@@ -164,6 +164,9 @@ void run_daq() {
 }
 
 void run_fft() {
+
+  int trim_samples = 64;
+
   //_in[](double)(0xFFFF - _adc_data[i]) * (5.12f/65536.0f);
 
   fftw_execute(_p);
@@ -174,9 +177,17 @@ void run_fft() {
 
   }
 
-  for (double fft : _fft_mag)
-    printf("%f\n", fft);
+  for ( int i = 0; i < trim_samples; i++ ) {
+    _fft_mag[i] = 0;
+    _fft_mag[ADC_DATA_SIZE - i - 1] = 0;
+  }
 
+  //int peak = 0;
+
+  //for (int i = 0; i < ADC_DATA_SIZE; i++)
+  //  if (_fft_mag[i] > peak) peak = i;
+
+  //printf("%f\t%f\n", _fft_ang[peak], _fft_mag[peak]);
 }
 
 void plot_adc() {
@@ -233,7 +244,6 @@ void plot_adc() {
 void plot_fft() {
 
 	vector<double> xs, ys;
-  int trim_samples = 3;
 
   //for (uint16_t data : adc_data)
   //  printf("%f\n", (0xFFFF - data) * (5.12f/65536.0f));
@@ -248,11 +258,6 @@ void plot_fft() {
 
   }
   
-  for ( int i = 0; i < trim_samples; i++ ) {
-    ys[i] = 0;
-    ys[ADC_DATA_SIZE - i - 1] = 0;
-  }
-
   //printf("%04x\n", step_incr);
 
   RGBABitmapImageReference *imageReference = CreateRGBABitmapImageReference();
@@ -298,10 +303,10 @@ int main() {
 
   if ( spi_init() ) return 1;
 
-  for ( int i = 0; i < 5; i++ )
-    run_daq();
+  //for ( int i = 0; i < 5; i++ )
+  //  run_daq();
 
-  for (int i = 0; i < 1; i++) {
+  for (int i = 0; i < 10; i++) {
 
     thread t_daq(run_daq);
     thread t_fft(run_fft);
@@ -312,14 +317,14 @@ int main() {
 
   }
 
-  printf("ABGn pins\n");
-  printf("g2 %d\n", bcm2835_gpio_lev(RPI_BPLUS_GPIO_J8_08));
-  printf("g1 %d\n", bcm2835_gpio_lev(RPI_BPLUS_GPIO_J8_10));
-  printf("g0 %d\n", bcm2835_gpio_lev(RPI_BPLUS_GPIO_J8_13));
-  printf("CDGn pins\n");
-  printf("g2 %d\n", bcm2835_gpio_lev(RPI_BPLUS_GPIO_J8_03));
-  printf("g1 %d\n", bcm2835_gpio_lev(RPI_BPLUS_GPIO_J8_05));
-  printf("g0 %d\n", bcm2835_gpio_lev(RPI_BPLUS_GPIO_J8_07));
+  //printf("ABGn pins\n");
+  //printf("g2 %d\n", bcm2835_gpio_lev(RPI_BPLUS_GPIO_J8_08));
+  //printf("g1 %d\n", bcm2835_gpio_lev(RPI_BPLUS_GPIO_J8_10));
+  //printf("g0 %d\n", bcm2835_gpio_lev(RPI_BPLUS_GPIO_J8_13));
+  //printf("CDGn pins\n");
+  //printf("g2 %d\n", bcm2835_gpio_lev(RPI_BPLUS_GPIO_J8_03));
+  //printf("g1 %d\n", bcm2835_gpio_lev(RPI_BPLUS_GPIO_J8_05));
+  //printf("g0 %d\n", bcm2835_gpio_lev(RPI_BPLUS_GPIO_J8_07));
 
   bcm2835_aux_spi_write(0x0000);
 
